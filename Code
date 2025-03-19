@@ -1,0 +1,139 @@
+-- DATABASE CREATION
+CREATE DATABASE CollegeManagement;
+USE CollegeManagement;
+
+-- TABLE CREATION
+CREATE TABLE Departments (
+    DepartmentID INT PRIMARY KEY AUTO_INCREMENT,
+    DepartmentName VARCHAR(100) UNIQUE NOT NULL,
+    HOD VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Students (
+    StudentID INT PRIMARY KEY AUTO_INCREMENT,
+    Name VARCHAR(100) NOT NULL,
+    DOB DATE NOT NULL,
+    Gender ENUM('Male', 'Female', 'Other') NOT NULL,
+    Email VARCHAR(100) UNIQUE NOT NULL,
+    Phone VARCHAR(15) UNIQUE NOT NULL,
+    Address TEXT NOT NULL,
+    DepartmentID INT,
+    ScholarshipStatus VARCHAR(50),
+    FOREIGN KEY (DepartmentID) REFERENCES Departments(DepartmentID)
+);
+
+CREATE TABLE Faculty (
+    FacultyID INT PRIMARY KEY AUTO_INCREMENT,
+    Name VARCHAR(100) NOT NULL,
+    Email VARCHAR(100) UNIQUE NOT NULL,
+    Phone VARCHAR(15) UNIQUE NOT NULL,
+    DepartmentID INT,
+    Salary DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (DepartmentID) REFERENCES Departments(DepartmentID)
+);
+
+CREATE TABLE Courses (
+    CourseID INT PRIMARY KEY AUTO_INCREMENT,
+    CourseName VARCHAR(100) NOT NULL,
+    DepartmentID INT,
+    Credits INT CHECK (Credits BETWEEN 1 AND 10),
+    FOREIGN KEY (DepartmentID) REFERENCES Departments(DepartmentID)
+);
+
+CREATE TABLE Enrollment (
+    EnrollmentID INT PRIMARY KEY AUTO_INCREMENT,
+    StudentID INT,
+    CourseID INT,
+    Semester INT CHECK (Semester BETWEEN 1 AND 8),
+    Year YEAR,
+    Grade CHAR(2),
+    FOREIGN KEY (StudentID) REFERENCES Students(StudentID),
+    FOREIGN KEY (CourseID) REFERENCES Courses(CourseID)
+);
+
+CREATE TABLE Exams (
+    ExamID INT PRIMARY KEY AUTO_INCREMENT,
+    CourseID INT,
+    ExamDate DATE NOT NULL,
+    TotalMarks INT NOT NULL,
+    PassingMarks INT NOT NULL,
+    FOREIGN KEY (CourseID) REFERENCES Courses(CourseID)
+);
+
+CREATE TABLE Results (
+    ResultID INT PRIMARY KEY AUTO_INCREMENT,
+    StudentID INT,
+    ExamID INT,
+    ObtainedMarks INT NOT NULL,
+    Grade CHAR(2),
+    FOREIGN KEY (StudentID) REFERENCES Students(StudentID),
+    FOREIGN KEY (ExamID) REFERENCES Exams(ExamID)
+);
+
+-- SAMPLE DATA INSERTION (Insert at least 20 students, 10 faculty members, courses, exams, and results)
+-- Queries for retrieving required information
+-- 1. Retrieve all student details who belong to the "Computer Science" department
+SELECT * FROM Students WHERE DepartmentID = (SELECT DepartmentID FROM Departments WHERE DepartmentName = 'Computer Science');
+
+-- 2. Display the list of courses offered by each department
+SELECT d.DepartmentName, c.CourseName FROM Courses c JOIN Departments d ON c.DepartmentID = d.DepartmentID;
+
+-- 3. Find all students enrolled in a particular course
+SELECT s.Name FROM Students s JOIN Enrollment e ON s.StudentID = e.StudentID WHERE e.CourseID = 1;
+
+-- 4. Retrieve faculty members who have a salary greater than X
+SELECT * FROM Faculty WHERE Salary > 50000;
+
+-- 5. Find the total number of students in each department
+SELECT d.DepartmentName, COUNT(s.StudentID) AS TotalStudents FROM Students s RIGHT JOIN Departments d ON s.DepartmentID = d.DepartmentID GROUP BY d.DepartmentName;
+
+-- 6. Find the average salary of faculty members per department
+SELECT d.DepartmentName, AVG(f.Salary) AS AvgSalary FROM Faculty f JOIN Departments d ON f.DepartmentID = d.DepartmentID GROUP BY d.DepartmentName;
+
+-- 7. Retrieve highest and lowest marks obtained in each exam
+SELECT ExamID, MAX(ObtainedMarks) AS HighestMarks, MIN(ObtainedMarks) AS LowestMarks FROM Results GROUP BY ExamID;
+
+-- 8. Retrieve list of students along with their enrolled courses
+SELECT s.Name, c.CourseName FROM Students s JOIN Enrollment e ON s.StudentID = e.StudentID JOIN Courses c ON e.CourseID = c.CourseID;
+
+-- STORED PROCEDURE: Update Student Grades Based on Marks
+DELIMITER //
+CREATE PROCEDURE UpdateGrades()
+BEGIN
+    UPDATE Results SET Grade = CASE
+        WHEN ObtainedMarks >= 90 THEN 'A'
+        WHEN ObtainedMarks >= 80 THEN 'B'
+        WHEN ObtainedMarks >= 70 THEN 'C'
+        WHEN ObtainedMarks >= 60 THEN 'D'
+        ELSE 'F' END;
+END //
+DELIMITER ;
+
+CALL UpdateGrades();
+
+-- TRIGGER: Automatically update ScholarshipStatus when student scores above 85 in any exam
+DELIMITER //
+CREATE TRIGGER UpdateScholarship
+AFTER INSERT ON Results
+FOR EACH ROW
+BEGIN
+    IF NEW.ObtainedMarks > 85 THEN
+        UPDATE Students SET ScholarshipStatus = 'Eligible' WHERE StudentID = NEW.StudentID;
+    END IF;
+END //
+DELIMITER ;
+
+-- VIEW: Display student names, their enrolled courses, and obtained marks
+CREATE VIEW StudentPerformance AS
+SELECT s.Name, c.CourseName, r.ObtainedMarks FROM Students s
+JOIN Enrollment e ON s.StudentID = e.StudentID
+JOIN Courses c ON e.CourseID = c.CourseID
+JOIN Results r ON s.StudentID = r.StudentID;
+
+-- REPORT: Department-wise student count, faculty count, and average exam performance
+SELECT d.DepartmentName, COUNT(DISTINCT s.StudentID) AS StudentCount, COUNT(DISTINCT f.FacultyID) AS FacultyCount, AVG(r.ObtainedMarks) AS AvgMarks
+FROM Departments d
+LEFT JOIN Students s ON d.DepartmentID = s.DepartmentID
+LEFT JOIN Faculty f ON d.DepartmentID = f.DepartmentID
+LEFT JOIN Results r ON s.StudentID = r.StudentID
+GROUP BY d.DepartmentName;
