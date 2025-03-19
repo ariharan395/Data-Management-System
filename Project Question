@@ -1,0 +1,52 @@
+Final Year SQL Project: College Management System
+
+Project Overview 
+Design an SQL-based *College Management System* to manage students, courses, faculty, and examinations.  
+
+Tasks and Requirements  
+
+### *1. Database Schema Creation*  
+- Create tables with appropriate constraints (Primary Key, Foreign Key, Unique, Not Null, Check, etc.).  
+- Tables:  
+  - *Students(StudentID, Name, DOB, Gender, Email, Phone, Address, DepartmentID)*  
+  - *Departments(DepartmentID, DepartmentName, HOD)*  
+  - *Courses(CourseID, CourseName, DepartmentID, Credits)*  
+  - *Faculty(FacultyID, Name, Email, Phone, DepartmentID, Salary)*  
+  - *Enrollment(EnrollmentID, StudentID, CourseID, Semester, Year, Grade)*  
+  - *Exams(ExamID, CourseID, ExamDate, TotalMarks, PassingMarks)*  
+  - *Results(ResultID, StudentID, ExamID, ObtainedMarks, Grade)*  
+ 
+- Insert at least *20 records* for Students.  
+- Insert at least *10 records* for Faculty.  
+- Insert multiple Courses for each Department.  
+- Insert Exam details and corresponding Results.  
+
+  
+1. Retrieve all student details who belong to the "Computer Science" department.  
+2. Display the list of courses offered by each department.  
+3. Find all students enrolled in a particular course.  
+4. Retrieve faculty members who have a salary greater than 
+5. Find the total number of students in each department.  
+6. Find the average salary of faculty members per department.  
+7. Retrieve the highest and lowest marks obtained in each exam.  
+
+ 
+8. Retrieve the list of students along with their enrolled courses.  
+9. Get the names of students who have failed in at least one exam.  
+10. Display faculty names along with the courses they teach.  
+
+11. Retrieve students who have secured the top 3 ranks in any course.  
+12. Find students who have not enrolled in any course.  
+13. Identify students who have not appeared in any exams.  
+14. Find departments where the total number of students is more than 100  
+
+
+15. Update the salary of faculty members based on their department.  
+16. Delete all students who have not enrolled in any course.  
+17. Modify the table structure to add a new column "ScholarshipStatus" in the Students table.  
+18. Create a view that displays student names, their enrolled courses, and obtained marks.  
+19. Implement a stored procedure to update student grades based on marks.  
+20. Implement a trigger that automatically updates the "ScholarshipStatus" when a student scores above 
+  
+21. Generate a report showing department-wise student count, total faculty, and average exam performance.  
+22. Implement a ranking system for students based on their overall performance.
